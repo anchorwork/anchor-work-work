@@ -1,109 +1,71 @@
-# Anchorwork Agents Overview
+# Anchorwork Logging System
 
-The `agents/` folder contains all modular AI personas (agents) that power the Anchorwork system. Each agent is designed for a specific role, workflow, or psychological function, but all share a common architecture for extensibility, memory, and tool use.
+## Overview
 
----
+The Anchorwork logging system provides robust, multi-backend, and queryable logging for all agents, APIs, and system components. It is designed for full auditability, real-time monitoring, and analytics in a multi-agent, memory-centric AI platform.
 
-## Folder Structure
+## Features
+- **Unified logging interface**: All logs are routed through `log_event` in `logging/__init__.py`.
+- **Multi-backend support**:
+  - **File logging** (`file_logger.py`): Persistent, rotating file logs for audit and backup.
+  - **PostgreSQL logging** (`db_logger.py`): Structured, queryable logs for analytics, dashboards, and compliance.
+  - **Redis Streams logging** (`redis_logger.py`): Real-time event streaming for monitoring and live dashboards.
+  - **Memory pipeline logging** (`memory_logger.py`): Logs important events to the agent memory system.
+- **Structured event schema**: All logs include timestamp, agent, session, event_type, level, and metadata.
+- **Role-based access**: Only authorized agents (e.g., Cartographer) can write to protected indexes like anchorwork core.
+- **Retention and health**: Metrics and health checks for all log backends.
 
-- `base_agent.py` — The abstract base class and core logic for all agents.
-- `alchemist/`, `cartographer/`, `coder/`, `compass/`, `firstmate/`, `researcher/`, `watcher/` — Subfolders for each specialized agent, containing their unique tools, workflows, and memory extensions.
-- `__init__.py` — For package/module imports.
+## Usage
 
----
-
-## Agent Architecture
-
-### **BaseAgent (base_agent.py)**
-- **Purpose:** Provides the foundational logic for all agents, including:
-  - Identity and profile management
-  - Memory pipeline integration (short-term, working, long-term)
-  - Education ingestion and self-reflection
-  - Logging and event tracking
-  - Tool registration and permission management
-  - Model switching (via ModelSwitchingMixin)
-- **Key Methods:**
-  - `boot_up()`: Loads identity, notes, education, and memory context.
-  - `periodic_education_ingestion()`: Background thread for ongoing learning.
-  - `self_reflect()`: Generates agent-specific summaries and next steps.
-  - `append_dynamic_identity_note()`: Adds new notes to agent identity.
-  - `log_event()`: Unified logging for all agent actions.
-  - `system_runner`: Safe system command execution for agent workflows.
-- **Extensibility:**
-  - Agents inherit from `BaseAgent` and can override or extend any method.
-  - New tools, workflows, or memory strategies can be added per agent.
-
-### **Agent Memory**
-- Each agent integrates with the `memory_pipeline` for multi-tiered memory (sensory, STM, working, LTM).
-- Summaries and education are stored in agent-specific folders or upserted to Pinecone for semantic recall.
-- Agents can retrieve, summarize, and reflect on their own history for context-aware reasoning.
-
----
-
-## Specialized Agents
-
-Each agent subfolder contains:
-- **Agent definition** (e.g., `cartographer.py`, `coder.py`): Implements the agent’s persona, tools, and workflows.
-- **Tools and utilities**: All shared tools and agent-specific tools are located in the `tools/` folder. Each agent imports and registers the tools it needs from there (e.g., `tools/cartographer_tools.py`, `tools/coder_tools.py`, etc.).
-- **Memory extensions**: Custom memory handling or education ingestion as needed.
-
-### **Example Agents**
-- **Cartographer:** Structure, outline, and map knowledge; guides manual writing and context navigation.
-- **Coder:** Code generation, static analysis, and automation; integrates with static_analysis and system_runner.
-- **Compass:** Values alignment, ethical scenario analysis, and affirmation; supports reflection and decision-making.
-- **Firstmate, Alchemist, Watcher, Researcher:** Each with unique tools and workflows for emotional support, ritual, research, or monitoring.
-
----
-
-## Adding a New Agent
-
-1. Create a new subfolder (e.g., `agents/newagent/`).
-2. Inherit from `BaseAgent` and implement your agent’s persona, tools, and workflows.
-3. Register any new tools or memory strategies.
-4. Document the agent’s purpose and usage in a README or docstring.
-
----
-
-## Best Practices
-- Always inherit from `BaseAgent` for consistency and access to core features.
-- Use the memory pipeline for all agent memory operations.
-- Register new tools and workflows in the agent’s subfolder.
-- Log all important actions using the unified logging system.
-- Keep agent logic modular and extensible for future growth.
-
----
-
-## Coder Agent: Safe Code Update Workflow
-
-The Coder agent now follows a modern, production-grade workflow for all code changes:
-
-1. **Branching:** All changes are made in a new feature branch (never directly to main).
-2. **Pull Request (PR):** The agent pushes the branch and opens a PR on GitHub.
-3. **Automated CI/CD:** The PR triggers automated tests (CI) via GitHub Actions or your configured CI system.
-4. **CI Status Checks:** The agent can wait for all CI checks to pass before proceeding.
-5. **Auto-Merge:** If enabled, the agent will automatically merge the PR after all checks pass.
-6. **Auditability:** All actions are logged and auditable; no code is merged without passing tests.
-
-### Example Usage
-
+Import and use the unified logging interface:
 ```python
-agent.safe_code_update(
-    repo="yourusername/yourrepo",
-    code={"agents/coder/coder.py": "new code here"},
-    message="Refactor coder agent logic",
-    wait_for_ci=True,        # Wait for CI to pass
-    auto_merge=True          # Auto-merge after CI passes
-)
+from logging import log_event
+log_event("event_type", {"message": "Something happened", ...}, agent="coder", session_id="abc123", level="INFO")
 ```
 
-### Best Practices
-- Always use the safe code update workflow for agent-driven changes.
-- Review PRs on GitHub if human/agent review is desired before merging.
-- Ensure your CI/CD is configured to run tests on every PR.
-- The agent requires a GitHub token with repo and PR permissions (set in `.env` as `GITHUB_TOKEN`).
+## Backends
+- **file_logger.py**: Rotating file handler for `anchorwork.log`.
+- **db_logger.py**: Inserts logs into a PostgreSQL `logs` table with indexes for fast queries.
+- **redis_logger.py**: Publishes logs to Redis Streams for real-time consumption.
+- **memory_logger.py**: Appends important events to the agent memory pipeline.
+- **metrics.py**: Aggregates log metrics and provides health checks.
+- **config.py**: Centralizes logging configuration and important event types.
 
-For more details, see the implementation in `agents/coder/coder.py` and `tools/coder_tools.py`.
+## Event Types
+- `event_type`: The type of event (e.g., `memory_append`, `api_call`, `error`, `session_end`).
+- `level`: Log level (`INFO`, `WARNING`, `ERROR`, `CRITICAL`).
+- `metadata`: Structured JSON with all relevant event data.
+
+## Best Practices
+- Always use `log_event` for all logging needs.
+- Use structured metadata for easy querying and analytics.
+- Only milestone summaries (not full logs) should be upserted to Pinecone for semantic memory.
+- Use PostgreSQL for analytics, Redis Streams for real-time, and file logs for backup/audit.
+
+## Extending
+- Add new log sinks by implementing a new logger and calling it from `log_event`.
+- Use metrics and health checks to monitor log ingestion and backend status.
+
+## Example Query (PostgreSQL)
+```sql
+SELECT * FROM logs WHERE agent_id = 'coder' AND event_type = 'memory_append' ORDER BY timestamp DESC LIMIT 100;
+```
 
 ---
 
-For more details, see `base_agent.py`, the `utils/README.md` for memory and backend architecture, the `tools/README.md` for shared and agent-specific tools, and each agent’s subfolder for specialized workflows.
+## Recent Updates (May 2025)
+
+- **Unified Redis Logging:** Use `utils/redis_managers.py` for all Redis Streams and Stack logging. The old `redis_logger.py` is being migrated.
+- **MemoryMover:** Background memory summarization is handled by `MemoryMover`.
+- **Watcher Monitoring:** The Watcher agent now monitors memory and job health, alerting on issues.
+
+---
+
+## Handoff Summary
+
+- Use the Streams manager in `redis_managers.py` for real-time event logging.
+- Remove or refactor any direct usage of `redis_logger.py` after migration.
+- See `README.md` and `utils/README.md` for more details on the new architecture and next steps.
+
+---
+For more details, see the code in each logger file or contact the Anchorwork maintainers.
