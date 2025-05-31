@@ -1,45 +1,61 @@
-# Tests Folder Audit Review
+# Crew Folder Audit Review
 
 ## Files Audited
-- README.md (64 lines)
-- test_all_endpoints.py (62 lines)
-- test_api_integration.py (174 lines)
-- test_dashboard.py (474 lines)
-- test_enhanced_api.py (empty)
-- test_enhanced_memory.py (empty)
-- test_hybrid_logging.py (empty)
-- test_memory_api.py (48 lines)
-- test_memory_pipeline.py (32 lines)
-- test_memory_system.py (123 lines)
-- test_redis_migration.py (172 lines)
+- agent_interaction.py (75 lines)
+- brainstorm_orchestrator.py (81 lines)
+- council_ui.py (78 lines)
+- crew_history.py (89 lines)
+- ritual_synthesis.py (51 lines)
+- voting.py (71 lines)
 
 ## Summary
-All lines of all non-empty files in the `tests` folder were read and reviewed in full. Empty files were noted.
+All lines of all files in the `crew` folder were read and reviewed in full.
 
 ## Findings and Recommendations
 
 ### General
-- The tests folder contains a mix of integration, API, system, and pipeline tests.
-- Tests use pytest, unittest.mock, and FastAPI TestClient.
-- Some test files are empty and need implementation.
-- Tests cover key functionality but could be expanded for edge cases and error conditions.
-- Test coverage and CI integration are not evident; recommend adding coverage reports and CI pipelines.
+- The crew folder implements multi-agent collaboration features including interaction, brainstorming, council UI, history logging, ritual synthesis, and voting.
+- Code is modular, well-documented, and uses async where appropriate.
+- Uses external `crew_registry` for agent metadata and access.
 
-### Specific Observations
-- `test_all_endpoints.py` performs basic endpoint smoke tests.
-- `test_api_integration.py` tests enhanced logging API with Redis and AgentMemory.
-- `test_dashboard.py` is a comprehensive async test suite for the dashboard.
-- `test_memory_api.py` and `test_memory_pipeline.py` test memory append and query functionality.
-- `test_memory_system.py` tests end-to-end memory system integration.
-- `test_redis_migration.py` verifies Redis log migration success.
+### agent_interaction.py
+- Provides agent-to-agent commentary with personality-based flavor.
+- Simple but extensible design.
+- Suggest adding error handling for missing agents.
+
+### brainstorm_orchestrator.py
+- Orchestrates async multi-agent brainstorming.
+- Handles special cases for agents with different call signatures.
+- Suggest adding timeout and error handling for agent calls.
+
+### council_ui.py
+- Uses `rich` library for terminal UI display.
+- Provides both panel and table views.
+- Includes interactive prompt for decision making.
+- Suggest adding unit tests for UI functions.
+
+### crew_history.py
+- Implements append-only JSONL log for crew events.
+- Provides search and formatting utilities.
+- Uses file-based storage; consider concurrency and locking for multi-process safety.
+
+### ritual_synthesis.py
+- Combines council responses into a ritual narrative.
+- Simple string assembly; could be enhanced with AI-powered synthesis.
+
+### voting.py
+- Implements simple random voting simulation.
+- Supports tallying and formatted results.
+- Suggest adding weighted voting and consensus detection.
 
 ## Action Plan
-1. Implement tests for empty test files.
-2. Add more edge case and error handling tests.
-3. Integrate test coverage and CI pipelines.
-4. Document test running instructions.
-5. Regularly update tests with new features.
+1. Add error handling and validation for agent lookups.
+2. Add timeout and error handling for async agent calls.
+3. Add unit tests for UI and orchestration functions.
+4. Consider concurrency-safe logging for crew history.
+5. Enhance ritual synthesis with AI or rule-based logic.
+6. Extend voting system with weighted and consensus features.
 
 ---
 
-I have completed the audit of the `tests` folder. Please advise on the next folder or task.
+I will now proceed to audit the next folder: `routes` and provide its auditreview.md after completion.
